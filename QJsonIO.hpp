@@ -153,10 +153,35 @@ class QJsonIO
         for (const auto &[key, type] : path)
         {
             _stack.prepend({ key, type, lastNode });
+            if (lastNode.isNull())
+            {
+                if (type == QJsonIOPathType::JSONIO_MODE_ARRAY)
+                {
+                    lastNode = QJsonArray();
+                }
+                else
+                {
+                    lastNode = QJsonObject();
+                }
+            }
             if (type == QJsonIOPathType::JSONIO_MODE_ARRAY)
-                lastNode = lastNode.toArray()[key.toInt()];
+            {
+                QJsonArray array = lastNode.toArray();
+                int index = key.toInt();
+                if (index >= array.size())
+                {
+                    for (int i = array.size(); i <= index; ++i)
+                    {
+                        array.append(QJsonValue());
+                    }
+                }
+                lastNode = array[index];
+            }
             else
-                lastNode = lastNode.toObject()[key];
+            {
+                QJsonObject object = lastNode.toObject();
+                lastNode = object[key];
+            }
         }
 
         lastNode = t;
